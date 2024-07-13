@@ -7,6 +7,7 @@ import {
   ServiceProvider,
 } from "../constant";
 import { isModelAvailableInServer } from "../utils/model";
+import { cloudflareAIGatewayUrl } from "../utils/cloudflare";
 
 const serverConfig = getServerSideConfig();
 
@@ -37,7 +38,7 @@ export async function requestOpenai(req: NextRequest) {
   );
 
   let baseUrl =
-    serverConfig.azureUrl || serverConfig.baseUrl || OPENAI_BASE_URL;
+    (isAzure ? serverConfig.azureUrl : serverConfig.baseUrl) || OPENAI_BASE_URL;
 
   if (!baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;
@@ -66,9 +67,37 @@ export async function requestOpenai(req: NextRequest) {
       "/api/azure/",
       "",
     )}?api-version=${azureApiVersion}`;
+
+    // Forward compatibility:
+    // if display_name(deployment_name) not set, and '{deploy-id}' in AZURE_URL
+    // then using default '{deploy-id}'
+    if (serverConfig.customModels && serverConfig.azureUrl) {
+      const modelName = path.split("/")[1];
+      let realDeployName = "";
+      serverConfig.customModels
+        .split(",")
+        .filter((v) => !!v && !v.startsWith("-") && v.includes(modelName))
+        .forEach((m) => {
+          const [fullName, displayName] = m.split("=");
+          const [_, providerName] = fullName.split("@");
+          if (providerName === "azure" && !displayName) {
+            const [_, deployId] = (serverConfig?.azureUrl ?? "").split(
+              "deployments/",
+            );
+            if (deployId) {
+              realDeployName = deployId;
+            }
+          }
+        });
+      if (realDeployName) {
+        console.log("[Replace with DeployId", realDeployName);
+        path = path.replaceAll(modelName, realDeployName);
+      }
+    }
   }
 
-  const fetchUrl = `${baseUrl}/${path}`;
+  const fetchUrl = cloudflareAIGatewayUrl(`${baseUrl}/${path}`);
+  console.log("fetchUrl", fetchUrl);
   const fetchOptions: RequestInit = {
     headers: {
       "Content-Type": "application/json",

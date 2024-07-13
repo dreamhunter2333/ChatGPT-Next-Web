@@ -122,16 +122,13 @@ export class GeminiProApi implements LLMApi {
     const controller = new AbortController();
     options.onController?.(controller);
     try {
-      // let baseUrl = accessStore.googleUrl;
-
-      if (!baseUrl) {
-        baseUrl = isApp
-          ? DEFAULT_API_HOST +
-            "/api/proxy/google/" +
-            Google.ChatPath(modelConfig.model)
-          : this.path(Google.ChatPath(modelConfig.model));
+      if (!baseUrl && isApp) {
+        baseUrl = DEFAULT_API_HOST + "/api/proxy/google/";
       }
-
+      baseUrl = `${baseUrl}/${Google.ChatPath(modelConfig.model)}`.replaceAll(
+        "//",
+        "/",
+      );
       if (isApp) {
         baseUrl += `?key=${accessStore.googleApiKey}`;
       }
@@ -154,8 +151,10 @@ export class GeminiProApi implements LLMApi {
         let finished = false;
 
         const finish = () => {
-          finished = true;
-          options.onFinish(responseText + remainText);
+          if (!finished) {
+            finished = true;
+            options.onFinish(responseText + remainText);
+          }
         };
 
         // animate response to make it looks smooth
