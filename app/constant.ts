@@ -393,6 +393,7 @@ You are an AI assistant with access to system tools. Your role is to help users 
 
 export const SUMMARIZE_MODEL = "gpt-4o-mini";
 export const GEMINI_SUMMARIZE_MODEL = "gemini-pro";
+export const DEEPSEEK_SUMMARIZE_MODEL = "deepseek-chat";
 
 export const KnowledgeCutOffDate: Record<string, string> = {
   default: "2021-09",
@@ -449,6 +450,8 @@ export const VISION_MODEL_REGEXES = [
 export const EXCLUDE_VISION_MODEL_REGEXES = [/claude-3-5-haiku-20241022/];
 
 const openaiModels = [
+  // As of July 2024, gpt-4o-mini should be used in place of gpt-3.5-turbo,
+  // as it is cheaper, more capable, multimodal, and just as fast. gpt-3.5-turbo is still available for use in the API.
   "gpt-3.5-turbo",
   "gpt-3.5-turbo-1106",
   "gpt-3.5-turbo-0125",
@@ -471,6 +474,7 @@ const openaiModels = [
   "dall-e-3",
   "o1-mini",
   "o1-preview",
+  "o3-mini",
 ];
 
 const googleModels = [
@@ -561,7 +565,7 @@ const iflytekModels = [
   "4.0Ultra",
 ];
 
-const deepseekModels = ["deepseek-chat", "deepseek-coder"];
+const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner"];
 
 const xAIModes = ["grok-beta"];
 
